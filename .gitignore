@@ -1,0 +1,6 @@
+# Ignore all, except for Latex source files and figures
+*
+!.gitignore
+!*/
+!*.tex
+!*.eps
