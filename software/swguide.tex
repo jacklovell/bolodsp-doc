@@ -9,35 +9,49 @@
 
 \title{BOLODSP Software User's Guide}
 
-\author{Jack Lovell\thanks{\url{jack.lovell@durham.ac.uk}}}
+\author{Jack Lovell\thanks{\texttt{jack.lovell@durham.ac.uk}}}
 
 \date{\today}
 
 \maketitle
 
-\abstract
-This document serves as a guide for the end user to work with the BOLODSP software package which is bundled with D-TACQ's ACQ400 series firmware. A basic theory of operation is presented, and the parameters which control the operation of the BOLODSP module are discussed. General operation of D-TACQ's software, and the implementation details of the software and associated FPGA firmware module, are out of scope.
+\abstract{This document serves as a guide for the end user to work with the BOLODSP software package which is bundled with D-TACQ's ACQ400 series firmware.
+  A basic theory of operation is presented, and the parameters which control the operation of the BOLODSP module are discussed. General operation of
+  D-TACQ's software, and the implementation details of the software and associated FPGA firmware module, are out of scope.}
 
 \tableofcontents
 
 \section{Introduction}
-The BOLODSP software package is part of a custom module for D-TACQ ACQ400 series products used to operate the BOLO8BLF hardware module. It provides software control of the BOLODSP FPGA module through a series of Linux commands, as well as some helper applications to simplify the fine tuning of the signal processing capabilities of the module.
+The BOLODSP software package is part of a custom module for D-TACQ ACQ400 series products used to operate the BOLO8BLF hardware module. It provides
+software control of the BOLODSP FPGA module through a series of Linux commands, as well as some helper applications to simplify the fine tuning of the
+signal processing capabilities of the module.
 
-This document is \textit{not} a general user guide for D-TACQ software. For that, refer to the D-TACQ 4G user guide at \url{http://www.d-tacq.com}. It is only concerned with the commands and settings provided by the package itself. Likewise, any requests for support with operating a system with this package installed should be directed to D-TACQ directly, and not to the author, unless the query is specifically about an aspect of the BOLODSP module.
+This document is \textit{not} a general user guide for D-TACQ software. For that, refer to the D-TACQ 4G user guide at \mbox{\url{http://www.d-tacq.com}}.
+It is only concerned with the commands and settings provided by the package itself. Likewise, any requests for support with operating a system with this
+package installed should be directed to D-TACQ directly, and not to the author, unless the query is specifically about an aspect of the BOLODSP module.
 
 \section{Theory of Operation}
 \subsection{Voltage Measurement}
+\label{sec:voltage}
 \begin{figure}
   \centering
   \includegraphics[width=0.3\textwidth]{sensor_schematic.eps}
-  \caption{Electrical schematic of bolometer sensor}
-  \label{fig:sensor}
+  \caption{Electrical schematic of bolometer sensor\label{fig:sensor}}
 \end{figure}
-A resistive bolometer consists of 4 resistors in a Wheatstone bridge configuration (see Figure~\ref{fig:sensor}). The two resistors marked $R_m$ are ``measurement'' resistors, which are in thermal contact with a thin foil. Incident radiation heats the foil and hence the resistors, increasing their resistance. The two resistors marked $R_r$ are ``reference'' resistors: they are not in contact with the foil, and so their temperature (and hence resistance) remain constant.
+A resistive bolometer consists of 4 resistors in a Wheatstone bridge configuration (see Figure~\ref{fig:sensor}), as described in Ref~\cite{mast-1991}.
+The two resistors marked $R_m$ are ``measurement'' resistors, which are in thermal contact with a thin foil. Incident radiation heats the foil and hence
+the resistors, increasing their resistance. The two resistors marked $R_r$ are ``reference'' resistors: they are not in contact with the foil, and so their
+temperature (and hence resistance) remain constant.
 
-When a voltage $V_{in}$ is applied across one diagnoal of the bridge as shown, there will be zero output voltage $V_{out}$ if the bridge is balanced. However, if the measurement resistors have increased resistance compared to the reference resistors, the bridge will be unbalanced, and $V_{out}$ will be non-zero. By measuring $V_{out}$ it is therefore possible to calculate the resistance change of the foil, and by knowing the electrical and thermal properties of the sensor it is possible to then infer the temperature change and the absorbed power. The details of these calculations are out of the scope of this document.
+When a voltage $V_{in}$ is applied across one diagnoal of the bridge as shown, there will be zero output voltage $V_{out}$ if the bridge is balanced.
+However, if the measurement resistors have increased resistance compared to the reference resistors, the bridge will be unbalanced, and $V_{out}$ will be
+non-zero. By measuring $V_{out}$ it is therefore possible to calculate the resistance change of the foil, and by knowing the electrical and thermal
+properties of the sensor it is possible to then infer the temperature change and the absorbed power. The details of these calculations are out of the
+scope of this document.
 
-To minimise noise in the system, AC synchronous detection is used to measure $V_{out}$. An AC excitation voltage $V_{in}$ is applied to the bridge, typically a sinusoid with a frequency of a few 10s of kHz. The amplitude of $V_{out}$ at the same frequency is measured, and this voltage amplitude is used in the bolometer equation to determine the absorbed power. The amplitude calculation (demodulation) is performed on the FPGA module, as follows.
+To minimise noise in the system, AC synchronous detection is used to measure $V_{out}$. An AC excitation voltage $V_{in}$ is applied to the bridge,
+typically a sinusoid with a frequency of a few 10s of kHz. The amplitude of $V_{out}$ at the same frequency is measured, and this voltage amplitude is
+used in the bolometer equation to determine the absorbed power. The amplitude calculation (demodulation) is performed on the FPGA module, as follows.
 
 The excitation voltage $V_{in}$ is of the form
 \begin{equation}
@@ -49,9 +63,13 @@ Where $V_0$ is the amplitude of the excitation voltage and $\omega$ is the frequ
   \label{equ:vout}
   V_{out} = A\sin(\omega t + \phi)
 \end{equation}
-Where the amplitude $A$ is the quantity we want to measure, and $\phi$ is the phase difference between the output and excitation voltages. This phase shift is due to round trip time and parasitic capacitance in the system, and can be significant when there is a long cable between the electronics and the sensor.
+Where the amplitude $A$ is the quantity we want to measure, and $\phi$ is the phase difference between the output and excitation voltages. This phase
+shift is due to round trip time and parasitic capacitance in the system, and can be significant when there is a long cable between the electronics and
+the sensor.
 
-By multiplying $V_{out}$ with a normalised form of $V_{in}$ (which we shall call $V_{ref,i}$) and time averaging to remove the $2\omega$ frequency component from the resulting signal, we can obtain the amplitude, assuming it varies slowly compared to the time averaging window. This is known as the ``in-phase'' component, since the signal is multiplied by a reference voltage of the same phase as the excitation voltage:
+By multiplying $V_{out}$ with a normalised form of $V_{in}$ (which we shall call $V_{ref,i}$) and time averaging to remove the $2\omega$ frequency component
+from the resulting signal, we can obtain the amplitude, assuming it varies slowly compared to the time averaging window. This is known as the ``in-phase''
+component, since the signal is multiplied by a reference voltage of the same phase as the excitation voltage:
 \begin{equation}
   \label{equ:I}
   \begin{split}
@@ -60,7 +78,9 @@ By multiplying $V_{out}$ with a normalised form of $V_{in}$ (which we shall call
   &= \frac{A}{2}\cos \phi
   \end{split}
 \end{equation}
-Equation~\ref{equ:I} still depends on the phase $\phi$. Traditionally, some phase shift has been applied to $V_{ref,i}$ such that $\phi = 0$ to remove the phase dependence on $I$, but we employ a more general method. Consider a second reference, $V{ref,q}$ which is a quarter of a period out of phase with the excitation voltage:
+Equation~\ref{equ:I} still depends on the phase $\phi$. Traditionally, some phase shift has been applied to $V_{ref,i}$ such that $\phi = 0$ to remove the
+phase dependence on $I$, but we employ a more general method. Consider a second reference, $V{ref,q}$ which is a quarter of a period out of phase with the
+excitation voltage:
 \begin{equation}
   \label{equ:Q}
   \begin{split}
@@ -74,7 +94,8 @@ We can now combine Equations~\ref{equ:I} and~\ref{equ:Q} to remove the phase dep
   \label{equ:A}
   A = 2\sqrt{I^2 + Q^2}
 \end{equation}
-Equation~\ref{equ:A} thus gives a measure of the amplitude of the output voltage independent of phase, and hence independent of the hardware used. This method is known as ``quadrature detection''.
+Equation~\ref{equ:A} thus gives a measure of the amplitude of the output voltage independent of phase, and hence independent of the hardware used. This
+method is known as ``quadrature detection''.
 
 For completeness, the phase is given by:
 \begin{equation}
@@ -82,14 +103,167 @@ For completeness, the phase is given by:
   \phi = -\tan^{-1}\left(\frac{Q}{I}\right)
 \end{equation}
 
+On the FPGA, the time averaging is done using a low-pass fiter. The choice of filter coefficients will affect the integration time, or alternatively the
+bandwidth of the output. Higher bandwidth allows higher time resolution, but comes at the cost of increased noise in the measurement, since higher
+frequency noise components are less suppressed. A helper script exists to calculate the appropriate filter coefficients for a given bandwidth, and load
+them onto the FPGA (see Section~\ref{sec:lpfdesign}).
+
 \subsection{Voltage Offset}
-No sensor is perfect, in the sense that the bridge will never be perfectly balanced in the absense of any input power. Likewise, no electronics is perfect, and there will always be some cross talk between excitation and measurement voltages. This leads to a voltage offset with no input power:
+\label{sec:offset}
+No sensor is perfect, in the sense that the bridge will never be perfectly balanced in the absense of any input power. Likewise, no electronics is perfect,
+and there will always be some cross talk between excitation and measurement voltages. This leads to a voltage offset with no input power:
 \begin{equation}
   \label{equ:voff}
   V_{off} = A_{off}e^{i\phi_{off}}
 \end{equation}
-Note that the offset voltage has both an amplitude \textit{and} phase, which may be different to the phase of the signal due to incident power, making the measured voltage a complex signal. It is necessary to subtract this offset from the measured signal using a suitable complex subtraction, either by decomposing into real ($I$) and imaginary ($Q$) parts and subtracting the real and imaginary parts respectively of the offset, or by performing a vector-based subtraction using the cosine rule.
+Note that the offset voltage has both an amplitude \textit{and} phase, which may be different to the phase of the signal due to incident power, making the
+measured voltage a complex signal. It is necessary to subtract this offset from the measured signal using a suitable complex subtraction, either by
+decomposing into real ($I$) and imaginary ($Q$) parts and subtracting the real and imaginary parts respectively of the offset, or by performing a
+vector-based subtraction using the cosine rule.
 
-The FPGA firmware has the capability to perform the first of these methods on-chip, using user-loadable offset values for each channel. When offset subtraction has been correctly performed, the remaining phase should be constant (being only a property of the geometry), and the remaining amplitude will be a measure only of the bridge imbalance (and hence the temperature change of the sensor foil). The phase is therefore a useful measurement for data validation.
+The FPGA firmware has the capability to perform the first of these methods on-chip, using user-loadable offset values for each channel. When offset
+subtraction has been correctly performed, the remaining phase should be constant (being only a property of the geometry), and the remaining amplitude will
+be a measure only of the bridge imbalance (and hence the temperature change of the sensor foil). The phase is therefore a useful measurement for data
+validation.
+
+\subsection{Real-Time Power Output}
+\label{sec:rtpower}
+The physics involved in calculating the power absorted by the foil from the resistance change of the meander resistors is complex, particularly when an AC
+excitation voltage is involved. For a throrough treatment of the subject, see Ref~\cite{giannone-2002}. However, the following simplified formula gives a
+good approximation of the more complex result:
+\begin{equation}
+  \label{equ:pbol}
+  P = \frac{1}{S}\left(A + \tau \frac{\mathrm{d}A}{\mathrm{d}t}\right)
+\end{equation}
+Here, $S$ is the sensitivity of the sensor, and $\tau$ is the cooling time. Both these values can be calculated using an in-situ calibration proceduce, as
+described in Section~\ref{sec:calibration}.
+
+The flexibility of the FPGA's digital filtering means it is possible to design a filter to both perform the time averaging described in
+Section~\ref{sec:voltage}, and adding to this the time derivative as in Equation~\ref{equ:pbol}. Using this filter (known as a ``deconvolution'' filter)
+will produce an estimate of the incident power straight from the bridge voltage measurement, with a latency of about 1ms, which should be quick enough to
+use in a real-time control loop. The design of this filter requires an accurate calibration, and is discussed in Section~\ref{sec:deconv}.
+
+\subsection{Calibration}
+\label{sec:calibration}
+It can be seen from Equation~\ref{equ:pbol} that at least 2 quantities need to be determined from a calibration: the sensitivity $S$ and the cooling time
+$\tau$. The sensitivity can be determined by measuring the rise in the voltage output for a known input power, and the cooling time can be calculated by
+fitting an exponential decay to the voltage curve as the sensor cools immediately after removing all input power. In the BOLO system, the input power is
+provided by ohmic heating, by applying a DC bias to both $V_{in}$ and $V_{out}$, whilst at the same time keeping the AC excitation voltage of $V_{in}$ to
+simulate operation with radiation heating as closely as possible.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.5\textwidth]{calibration.eps}
+  \caption{Electrical schematic of the calibration procedure\label{fig:calibration}}
+\end{figure}
+
+The calibration producure is described in some detail in~\cite{lovell-2015}. Figure~\ref{fig:calibration}, taken from that paper, shows the calibration
+proceedure. The application of $V_{OS}$ is such that current flows through the two measurement resistors $R_M$, but not through the reference resistors
+$R_R$. This causes only the measurement resistors to be ohmically heated, with a heating power given by
+\begin{equation}
+  \label{equ:pohmic}
+  P_{OH} = 2 V_{OS} I_{OS}
+\end{equation}
+When the ohmic heating is switched off, the sensor cools. The bridge voltage (amplitude and phase) measured during cooling provides a number of useful
+calibration values. They must however be converted into Carteisan representation ($I$ and $Q$) first:
+\begin{itemize}
+\item{The offsets $A_{off}$ and $\phi_{off}$ can be calculated using Equations~\ref{equ:I} and~\ref{equ:Q}, using $I_{off} = I(t\rightarrow\infty)$ and $Q_{off}
+    = Q(t\rightarrow\infty)$}
+\item{The cooling time can be calculated by fitting an exponential decay of the $I$ and $Q$ cooling curves. The decay time constant is the cooling time.
+    It should be the same (to within errors) for both curves.}
+\item{The sensitivity is given by $S = \frac{P_{OH}}{\Delta A}$, where $P_{OH}$ is given by Equation~\ref{equ:pohmic} and $\Delta A$ is given by
+    Equation~\ref{equ:A}, using $\Delta I = I(t=0) - I_{off}$, and $\Delta Q = Q(t=0) - Q_{off}$.}
+\end{itemize}
+During the calibration, the FPGA measures $V_{OH} = 2V_{OS}$ and $I_{OS}$, in addition to $A$ and $\phi$, thus providing all the required data for a
+calibration in one place. Note the difference between $V_{OH}$ and $V_{OS}$: the latter is provided only for illustration, whereas the former is what is
+configured by software and subsequently measured.
+
+\section{Data Outputs}
+\label{sec:outputs}
+\subsection{Output Channel Format}
+\label{sec:channels}
+For each physical channel on a BOLO8, there are 3 ``logical'' output channels. This means each BOLO8 site has 24 output channels, each of which can be read
+like any other D-TACQ output (see the D-TACQ 4G user guide for details). All channels are 4-byte signed integers. The channels are arranged as follows:
+\begin{enumerate}
+\item{The voltage amplitude $A$ from the quadrature synchronous detection process (Section~\ref{sec:voltage}).}
+\item{The phase $\phi$ from the quadrature synchronous detection process (Section~\ref{sec:voltage}).}
+\item{The third channel depends on the operating mode:}
+  \begin{enumerate}
+  \item{During normal mode: the real-time power calculation from the deconvolution process (Section~\ref{sec:rtpower}).}
+  \item{During calibration mode: a combination of the ohmic heating voltage $V_{OH}$ and current $I_{OH}$ (Section~\ref{sec:calibration}). The top 2 bytes of
+      each 4-byte sample are the voltage, and the bottom 2 bytes are the current. In other words, this output is $V_{OH} \times 2^{16} + I_{OH}$. In this
+      scenario, $V_{OH}$ is a signed 2-byte integer, and $I_{OH}$ is an unsigned 2-byte integer.}
+  \end{enumerate}
+\end{enumerate}
+
+For a phycial channel $N$ (numbered 1--8 per site), logical channel $3N-2$ is the voltage amplitude, $3N-1$ is the voltage phase and $3N$ is either the
+real-time power or calibration quantities. So for example, for physical channel 3, logical channel 7 is the amplitude, 8 is the phase and 9 is
+power/calibration signals.
+
+\subsection{Data Scaling}
+\label{sec:scaling}
+The following are the numerical conversion factors to convert from raw counts (the 2- or 4-byte values read from the device) into physical units. There is
+a dependence on $V_{gain}$, which is the voltage gain used on the BOLO8's ADCs. The value can be read back as a knob in CSS or EPICS (or your favourite data
+acquisition tool); contact D-TACQ for the details of setting and reading these values. The recommended gain is 1V2 (1.25V), since the bolometer signals are
+typically small (10s to a few 100s of mV), even with strong radiation.
+
+There is also a dependence on the CORDIC scale factor:
+\begin{equation}
+  \label{equ:cordic}
+  \begin{split}
+    Z_{30} &= \prod_{i=1}^{30}\sqrt{1 + 2^{-2i}} \\
+    &= 1.1644353\ldots
+  \end{split}
+\end{equation}
+This is due to the algorithm used to convert $I$ and $Q$ into $A$ and $\phi$ on the FPGA.
+
+The scalings are as follows:
+\begin{equation}
+  \label{equ:avolts}
+  \begin{split}
+    A(V) &= A(counts) V_{gain} \frac{20}{18 \times 2^{24} \times Z_{30}} \\
+    &= A(counts) V_{gain} \times 5.6875105\ldots \times 10^{-8}
+  \end{split}
+\end{equation}
+
+\begin{equation}
+  \label{equ:phirad}
+  \begin{split}
+    \phi(rad) &= \phi(counts) \times 2^{-29} \\
+    &= \phi(counts) \times 1.8626451\ldots \times 10^{-9}
+  \end{split}
+\end{equation}
+
+\begin{equation}
+  \label{equ:pwatts}
+  \begin{split}
+    P(W) &= P(counts) V_{gain} \frac{20}{18 \times 2^{24} \times Z_{30}} \\
+    &= P(counts) V_{gain} \times 3.6400067\ldots \times 10^{-6}
+  \end{split}
+\end{equation}
+
+\begin{equation}
+  \label{equ:vdcvolts}
+  \begin{split}
+    V_{OH}(V) &= V_{OH}(counts) V_{gain} \times 2^{-15} \\
+    &= V_{OH} V_{gain} \times 3.0517578\ldots \times 10^{-5}
+  \end{split}
+\end{equation}
+
+\begin{equation}
+  \label{equ:curramps}
+  \begin{split}
+    I_{OH}(A) &= I_{OH}(counts) \times \frac{25}{3 \times 2^{12} \times 1000} - I_{off} \\
+    &= I_{OH}(counts) \times 2.0345052\ldots \times 10^{-6} - I_{off}
+  \end{split}
+\end{equation}
+
+$I_{off}$ in Equation~\ref{equ:curramps} is the current reading when $V_{OH} = 0$, i.e. no bias voltage is applied. In theory it should be around
+$20.83 \times 10^{-3} \mathrm{A}$ but will vary slighly between channels. The most reliable way to measure $I_{off}$ is to take the mean value of
+the current during the cooling part of the calibration.
+
+\bibliographystyle{ieeetr}
+\bibliography{refs}
+
 
 \end{document}
