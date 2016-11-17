@@ -141,7 +141,7 @@ described in Section~\ref{sec:calibration}.
 The flexibility of the FPGA's digital filtering means it is possible to design a filter to both perform the time averaging described in
 Section~\ref{sec:voltage}, and adding to this the time derivative as in Equation~\ref{equ:pbol}. Using this filter (known as a ``deconvolution'' filter)
 will produce an estimate of the incident power straight from the bridge voltage measurement, with a latency of about 1ms, which should be quick enough to
-use in a real-time control loop. The design of this filter requires an accurate calibration, and is discussed in Section~\ref{sec:deconv}.
+use in a real-time control loop. The design of this filter requires an accurate calibration, and is discussed in Section~\ref{sec:calibration}.
 
 \subsection{Calibration}
 \label{sec:calibration}
@@ -215,7 +215,7 @@ There is also a dependence on the CORDIC scale factor:
     &= 1.1644353\ldots
   \end{split}
 \end{equation}
-This is due to the algorithm used to convert $I$ and $Q$ into $A$ and $\phi$ on the FPGA.
+This is due to the algorithm used to convert $I$ and $Q$ into $A$ and $\phi$ on the FPGA\@.
 
 The scalings are as follows:
 \begin{equation}
@@ -258,9 +258,90 @@ The scalings are as follows:
   \end{split}
 \end{equation}
 
-$I_{off}$ in Equation~\ref{equ:curramps} is the current reading when $V_{OH} = 0$, i.e. no bias voltage is applied. In theory it should be around
+$I_{off}$ in Equation~\ref{equ:curramps} is the current reading when $V_{OH} = 0$, i.e.\ no bias voltage is applied. In theory it should be around
 $20.83 \times 10^{-3} \mathrm{A}$ but will vary slighly between channels. The most reliable way to measure $I_{off}$ is to take the mean value of
 the current during the cooling part of the calibration.
+
+\section{Control Knobs}
+\label{sec:knobs}
+This section describes the control knobs available for the BOLODSP module. They are read and set in the same way as standard D-TACQ knobs using the remote
+command interface. See the D-TACQ 4G user guide for details.
+
+\subsection{Low-level knobs}
+\label{sec:knobsll}
+These control knobs are a fairly low level interface to the underlying FPGA module. For the most part they will be set by utility scripts. The ones which
+may require the user to manually set them (or at least write a script to do so during the shot cycle) are documented here.
+
+\subsubsection{DSP{\textunderscore}RESET}
+Set to 1 to reset the BOLODSP firmware module. Set to 0 to remove from reset. To ensure correct channel ordering and an accurate time base for the data,
+the module should be reset before each acquisition (transient or streaming). This is automatically handled by the calibration script.
+
+\subsubsection{STEP{\textunderscore}SIZE}
+This is used to generate the AC excitation voltage to the sensor. The excitation voltage is a sine wave of 18V amplitude. Note that the electronics is
+capable of $\pm 20\mathrm{V}$ output; the 2V headroom is left to enable DC biasing during calibration. Due to implementation details in the BOLODSP
+module, the STEP{\textunderscore}SIZE value $S$ required to produce an excitation voltage of $f$ Hz is given by:
+\begin{equation}
+  \label{equ:step_size}
+  S = \frac{f}{f_{clk}} \times 2^{27}
+\end{equation}
+Here, $f_{clk}$ is the system clock frequency. Is is typically 100 MHz on older D-TACQ systems, and 125 MHz on newer systems. Contact D-TACQ if you are
+unsure which frequency to use (or pick one and check the output on a scope to see if it's the correct frequency).
+
+There also exists a script, \path{/usr/local/bin/set.fdrive}~\texttt{<freq>}, which takes a frequency in Hz and automatically sets the register
+correctly. It can be executed by SSHing into the unit. By default it assumes 100 MHz system clock, but this can be changed by modifying the script
+contents (contact D-TACQ or the author for details).
+
+\subsubsection{Calibration}
+Set to 1 to put the device in calibration mode, 0 to put it in normal mode. This changes the data output in the third logical channel for each physical
+channel (Section~\ref{sec:channels}). Again, this is done automatically by the calibration script.
+
+\subsection{High-level knobs}
+\label{sec:knobshl}
+These control knobs interface with the BOLODSP module at a higher level. Their inputs are in physical units, rather than register settings, and the
+utility scripts read these knobs in order to set the lower-level knobs. All high-level knobs presented by the BOLODSP package are described here, and
+should be set by the user.
+
+\subsubsection{DIODE{\_}DROP{\_}V}
+This value, in volts, sets the extra voltage to apply to one diagonal of the bridge to compensate for the voltage drop across diodes in the electronics.
+
+The electronics features some diodes for noise reduction. There will be a voltage drop across these diodes, meaning that the applied bias voltage $V_{OH}$
+in calibration will be less than the requested voltage on one of the bridge diagonals. Set this knob (in volts) to apply an extra voltage across that
+diagonal to compensate for the voltage drop. The value should be tweaked until the measured ohmic heating voltage $V_{OH}$ (Section~\ref{sec:channels}) is
+close to that set by the VBIAS knob. As a guide, when VBIAS is set to 1V, the diode voltage drop is about 0.5V.
+
+\subsubsection{FILTER{\_}BANDWIDTH}
+As mentioned in Section~\ref{sec:voltage}, the choice of filter affects the trade-off between noise levels and time resolution. The filters themselves are
+designed using helper scripts (Section~\ref{sec:lpfdesign}). Those scripts take the value of this knob to design a filter with a given bandwidth. The
+bandwidth should be specified in Hz.
+
+\subsubsection{THEAT}
+This value, in seconds, specifies the length of time spent ohmically heating the sensor during calibration. It should be long enough to ensure the sensor
+has reached equilibrium, i.e.\~several cooling times.
+
+\subsubsection{TCOOL}
+This value, in seconds, specifies the length of time to continue measuring the calibration curve after ohmic heating is turned off. It thus controls the
+amount of the cooling curve measured. Like with THEAT, it should be set to multiple cooling times such that the sensor is nearly back in thermal
+equilibrium at the end of the measurement.
+
+\subsubsection{VBIAS}
+This value, in volts, specifies the bias voltage $V_{OH}$ to be used to ohmically heat the bridge during calibration. It must be $<1.2\mathrm{V}$. The
+required setting for DIODE{\_}DROP will typically depend upon this knob.
+
+\subsubsection{CAL{\_}EN}
+Set this to 1 to enable a calibration before a shot. You should ensure that the data acquisition system of which the unit is a part is set up to run 2
+acquitisions during the shot cycle: one to acquire the calibration data and a second to acquire the shot data.
+
+This knob is ignored by the BOLODSP module and software, but may be helpful for user-written shot-cycle scripts to examine and work out what they need to
+do.
+
+\subsubsection{CAL{\_}DELAY}
+This value, in seconds, specifies the length of time to wait between the start of a shot cycle (i.e.~prepare/arm) and the start of a calibration
+procedure. It allows the user to cause the calibration procedure to run at a known time in the shot initialisation sequence. This could for example mean
+performing the calibration as close as possible to the start of the shot, for conditions as similar as possible during the calibration and shot, or
+performing the calibration earlier before sources of electrical noise such as coil power supplies are switched on.
+
+Like the CAL{\_}EN knob, this is ignored by the BOLODSP module and software, but exists to allow user-written shot-cycle scripts to examine and work out
+what they need to do.
 
 \bibliographystyle{ieeetr}
 \bibliography{refs}
