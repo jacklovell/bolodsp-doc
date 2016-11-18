@@ -43,7 +43,7 @@ The two resistors marked $R_m$ are ``measurement'' resistors, which are in therm
 the resistors, increasing their resistance. The two resistors marked $R_r$ are ``reference'' resistors: they are not in contact with the foil, and so their
 temperature (and hence resistance) remain constant.
 
-When a voltage $V_{in}$ is applied across one diagnoal of the bridge as shown, there will be zero output voltage $V_{out}$ if the bridge is balanced.
+When a voltage $V_{in}$ is applied across one diagonal of the bridge as shown, there will be zero output voltage $V_{out}$ if the bridge is balanced.
 However, if the measurement resistors have increased resistance compared to the reference resistors, the bridge will be unbalanced, and $V_{out}$ will be
 non-zero. By measuring $V_{out}$ it is therefore possible to calculate the resistance change of the foil, and by knowing the electrical and thermal
 properties of the sensor it is possible to then infer the temperature change and the absorbed power. The details of these calculations are out of the
@@ -103,14 +103,14 @@ For completeness, the phase is given by:
   \phi = -\tan^{-1}\left(\frac{Q}{I}\right)
 \end{equation}
 
-On the FPGA, the time averaging is done using a low-pass fiter. The choice of filter coefficients will affect the integration time, or alternatively the
+On the FPGA, the time averaging is done using a low-pass filter. The choice of filter coefficients will affect the integration time, or alternatively the
 bandwidth of the output. Higher bandwidth allows higher time resolution, but comes at the cost of increased noise in the measurement, since higher
 frequency noise components are less suppressed. A helper script exists to calculate the appropriate filter coefficients for a given bandwidth, and load
 them onto the FPGA (see Section~\ref{sec:lpfdesign}).
 
 \subsection{Voltage Offset}
 \label{sec:offset}
-No sensor is perfect, in the sense that the bridge will never be perfectly balanced in the absense of any input power. Likewise, no electronics is perfect,
+No sensor is perfect, in the sense that the bridge will never be perfectly balanced in the absence of any input power. Likewise, no electronics is perfect,
 and there will always be some cross talk between excitation and measurement voltages. This leads to a voltage offset with no input power:
 \begin{equation}
   \label{equ:voff}
@@ -121,21 +121,21 @@ measured voltage a complex signal. It is necessary to subtract this offset from 
 decomposing into real ($I$) and imaginary ($Q$) parts and subtracting the real and imaginary parts respectively of the offset, or by performing a
 vector-based subtraction using the cosine rule.
 
-The FPGA firmware has the capability to perform the first of these methods on-chip, using user-loadable offset values for each channel. When offset
-subtraction has been correctly performed, the remaining phase should be constant (being only a property of the geometry), and the remaining amplitude will
-be a measure only of the bridge imbalance (and hence the temperature change of the sensor foil). The phase is therefore a useful measurement for data
-validation.
+The FPGA firmware has the capability to perform the first of these methods on-chip, using user-loadable offset values for each channel
+(Section~\ref{sec:offset_correction}). When offset subtraction has been correctly performed, the remaining phase should be constant (being only a property
+of the geometry), and the remaining amplitude will be a measure only of the bridge imbalance (and hence the temperature change of the sensor foil). The
+phase is therefore a useful measurement for data validation.
 
 \subsection{Real-Time Power Output}
 \label{sec:rtpower}
-The physics involved in calculating the power absorted by the foil from the resistance change of the meander resistors is complex, particularly when an AC
-excitation voltage is involved. For a throrough treatment of the subject, see Ref~\cite{giannone-2002}. However, the following simplified formula gives a
+The physics involved in calculating the power aborted by the foil from the resistance change of the meander resistors is complex, particularly when an AC
+excitation voltage is involved. For a thorough treatment of the subject, see Ref~\cite{giannone-2002}. However, the following simplified formula gives a
 good approximation of the more complex result:
 \begin{equation}
   \label{equ:pbol}
   P = \frac{1}{S}\left(A + \tau \frac{\mathrm{d}A}{\mathrm{d}t}\right)
 \end{equation}
-Here, $S$ is the sensitivity of the sensor, and $\tau$ is the cooling time. Both these values can be calculated using an in-situ calibration proceduce, as
+Here, $S$ is the sensitivity of the sensor, and $\tau$ is the cooling time. Both these values can be calculated using an in-situ calibration procedure, as
 described in Section~\ref{sec:calibration}.
 
 The flexibility of the FPGA's digital filtering means it is possible to design a filter to both perform the time averaging described in
@@ -157,15 +157,15 @@ simulate operation with radiation heating as closely as possible.
   \caption{Electrical schematic of the calibration procedure\label{fig:calibration}}
 \end{figure}
 
-The calibration producure is described in some detail in~\cite{lovell-2015}. Figure~\ref{fig:calibration}, taken from that paper, shows the calibration
-proceedure. The application of $V_{OS}$ is such that current flows through the two measurement resistors $R_M$, but not through the reference resistors
+The calibration procedure is described in some detail in~\cite{lovell-2015}. Figure~\ref{fig:calibration}, taken from that paper, shows the calibration
+procedure. The application of $V_{OS}$ is such that current flows through the two measurement resistors $R_M$, but not through the reference resistors
 $R_R$. This causes only the measurement resistors to be ohmically heated, with a heating power given by
 \begin{equation}
   \label{equ:pohmic}
   P_{OH} = 2 V_{OS} I_{OS}
 \end{equation}
 When the ohmic heating is switched off, the sensor cools. The bridge voltage (amplitude and phase) measured during cooling provides a number of useful
-calibration values. They must however be converted into Carteisan representation ($I$ and $Q$) first:
+calibration values. They must however be converted into Cartesian representation ($I$ and $Q$) first:
 \begin{itemize}
 \item{The offsets $A_{off}$ and $\phi_{off}$ can be calculated using Equations~\ref{equ:I} and~\ref{equ:Q}, using $I_{off} = I(t\rightarrow\infty)$ and $Q_{off}
     = Q(t\rightarrow\infty)$}
@@ -196,7 +196,7 @@ like any other D-TACQ output (see the D-TACQ 4G user guide for details). All cha
   \end{enumerate}
 \end{enumerate}
 
-For a phycial channel $N$ (numbered 1--8 per site), logical channel $3N-2$ is the voltage amplitude, $3N-1$ is the voltage phase and $3N$ is either the
+For a physical channel $N$ (numbered 1--8 per site), logical channel $3N-2$ is the voltage amplitude, $3N-1$ is the voltage phase and $3N$ is either the
 real-time power or calibration quantities. So for example, for physical channel 3, logical channel 7 is the amplitude, 8 is the phase and 9 is
 power/calibration signals.
 
@@ -259,7 +259,7 @@ The scalings are as follows:
 \end{equation}
 
 $I_{off}$ in Equation~\ref{equ:curramps} is the current reading when $V_{OH} = 0$, i.e.\ no bias voltage is applied. In theory it should be around
-$20.83 \times 10^{-3} \mathrm{A}$ but will vary slighly between channels. The most reliable way to measure $I_{off}$ is to take the mean value of
+$20.83 \times 10^{-3} \mathrm{A}$ but will vary slightly between channels. The most reliable way to measure $I_{off}$ is to take the mean value of
 the current during the cooling part of the calibration.
 
 \section{Control Knobs}
@@ -272,11 +272,11 @@ command interface. See the D-TACQ 4G user guide for details.
 These control knobs are a fairly low level interface to the underlying FPGA module. For the most part they will be set by utility scripts. The ones which
 may require the user to manually set them (or at least write a script to do so during the shot cycle) are documented here.
 
-\subsubsection{DSP{\textunderscore}RESET}
+\subsubsection{DSP{\_}RESET}
 Set to 1 to reset the BOLODSP firmware module. Set to 0 to remove from reset. To ensure correct channel ordering and an accurate time base for the data,
 the module should be reset before each acquisition (transient or streaming). This is automatically handled by the calibration script.
 
-\subsubsection{STEP{\textunderscore}SIZE}
+\subsubsection{STEP{\_}SIZE}
 This is used to generate the AC excitation voltage to the sensor. The excitation voltage is a sine wave of 18V amplitude. Note that the electronics is
 capable of $\pm 20\mathrm{V}$ output; the 2V headroom is left to enable DC biasing during calibration. Due to implementation details in the BOLODSP
 module, the STEP{\textunderscore}SIZE value $S$ required to produce an excitation voltage of $f$ Hz is given by:
@@ -291,9 +291,14 @@ There also exists a script, \path{/usr/local/bin/set.fdrive}~\texttt{<freq>}, wh
 correctly. It can be executed by SSHing into the unit. By default it assumes 100 MHz system clock, but this can be changed by modifying the script
 contents (contact D-TACQ or the author for details).
 
-\subsubsection{Calibration}
+\subsubsection{CALIBRATION}
 Set to 1 to put the device in calibration mode, 0 to put it in normal mode. This changes the data output in the third logical channel for each physical
 channel (Section~\ref{sec:channels}). Again, this is done automatically by the calibration script.
+
+\subsubsection{FILTER{\_}STATUS}
+This is a read-only knob, and indicates the readiness of the filters on the FPGA to be reloaded. It reports a hexadecimal value, and should be 0x33 before
+attempting any reload. If it reads anything else, ensure you have read back any previous capture data and then run
+\mbox{\path{/usr/local/bin/wait_for_filters}}, which will do a short capture to pass data through the filters so they are ready for the next reload.
 
 \subsection{High-level knobs}
 \label{sec:knobshl}
@@ -329,7 +334,7 @@ required setting for DIODE{\_}DROP will typically depend upon this knob.
 
 \subsubsection{CAL{\_}EN}
 Set this to 1 to enable a calibration before a shot. You should ensure that the data acquisition system of which the unit is a part is set up to run 2
-acquitisions during the shot cycle: one to acquire the calibration data and a second to acquire the shot data.
+acquisitions during the shot cycle: one to acquire the calibration data and a second to acquire the shot data.
 
 This knob is ignored by the BOLODSP module and software, but may be helpful for user-written shot-cycle scripts to examine and work out what they need to
 do.
@@ -342,6 +347,104 @@ performing the calibration earlier before sources of electrical noise such as co
 
 Like the CAL{\_}EN knob, this is ignored by the BOLODSP module and software, but exists to allow user-written shot-cycle scripts to examine and work out
 what they need to do.
+
+\section{Operation}
+\label{sec:operation}
+This section documents the usage of the various helper scripts throughout a shot cycle. Before a shot, a calibration should be performed (possible before
+every shot, but not strictly necessary), and the results of the calibration should be used to remove offsets from the signal and design the filters for
+the voltage and power output. After every capture (shot or calibration run) the BOLODSP module should be reset, using the
+\mbox{\path{/usr/local/bin/reset.dsp}} script, to ensure the correct channel ordering and to clean out any stale data from the signal processing
+module.
+
+Refer also to the data capture section of the D-TACQ 4G user guide for details of how to set up a transient capture.
+
+\subsection{Calibration}
+\label{sec:run_calibration}
+A calibration run proceeds as follows. These steps should be performed by a shot-cycle script.
+\begin{enumerate}
+\item{Set the high-level knobs described in Section~\ref{sec:knobshl}, and set the STEP{\_}SIZE low-level knob to give the desired excitation
+    frequency.}
+\item{Reset the DSP system, by setting the DSP{\_}RESET knob to 1 and then 0. This ensures the channel ordering and time bases will be
+    correct. This can be done simply by running the \mbox{\path{/usr/local/bin/reset.dsp}} script.}
+\item{Set the offsets for all voltage channels to 0 (Section~\ref{sec:offset_correction})}.
+\item{Set up a transient data capture, expecting a soft trigger, to acquire at least $(0.1 + T_{HEAT} + T_{COOL})\times 10000$ samples. The system is now
+    ready to perform the calibration.}
+\item{The \path{/usr/local/bin/bolo_calibration} script is used to control the hardware to perform a calibration procedure, as described in
+    Section~\ref{sec:calibration}. To run it, a user or script must have SSH access to the device. It reads the voltage and timing high-level knobs, and
+    proceeds as follows:
+\begin{enumerate}
+\item{Put the device in calibration mode, so that $V_{OH}$ and $I_{OH}$ are recorded, instead of real-time power.}
+\item{Trigger the data collection.}
+\item{Wait 0.1 seconds to measure the voltages and current with no heating applied (this can be helpful in post-processing).}
+\item{Turn the ohmic heating on, and wait for THEAT seconds}.
+\item{Turn the ohmic heating off, and wait until data collection finishes.}
+\item{Put the device in normal mode, so that the real-time power will be output on the next capture.}
+\end{enumerate}
+}
+\item{Reset the DSP system again before the shot, to ensure the correct channel ordering and time base.}
+\end{enumerate}
+
+The capture data should be read back before the shot capture is started, as the latter will overwrite the calibration data with shot data. The procedure
+takes THEAT + TCOOL + a few seconds to complete, plus the time to read back the calibration data. It is advisable to allow at least 30 seconds from
+starting a calibration to the expected shot trigger, just in case, but the procedure is quick enough to be performed before every shot if needed. Of
+course, a calibration can also be performed separately, by following this procedure manually.
+
+\subsection{Offset Correction}
+\label{sec:offset_correction}
+As described in Section~\ref{sec:offset}, the voltage measured by the BOLO8 will include an offset due to intrinsic bridge imbalance and cross talk in the
+electronics hardware and cabling. The offset can be measured from a calibration, either from the initial 0.1s equilibrium method or the asymptotic voltage
+calculated from the cooling curve --- both measurements should be equal. It is possible to remove this offset in post processing, but the BOLODSP FPGA
+module also has the ability to remove it during on-chip processing. This is particularly necessary for the real-time power signals if they are to be used
+in a control loop, since no phase information is kept.
+
+The on-chip offset correction consists of a series of registers which contain the $I_{off}$ and $Q_{off}$ values for each channel, followed by a second
+series of registers which contain $P_{I,off}$ and $P_{Q,off}$ values, where $P_{I,off} = I_{off}/S$ and $P_{Q,off} = I_{off}/S$ are the offsets in the
+real-time power signals. The script \mbox{\path{/usr/local/bin/load_offset_channel.tcl}} can be used to load these registers for a particular channel. It
+takes 4 mandatory arguments:
+\begin{enumerate}
+\item{\texttt{channel}: the channel to load, numbered from 1 to 48 (8 channels per site).}
+\item{\texttt{I0}: the offset value $I_{off}$ in V.}
+\item{\texttt{Q0}: the offset value $Q_{off}$ in V.}
+\item{\texttt{sens}: the sensitivity, as described in Section~\ref{sec:calibration}, in V/W.}
+\end{enumerate}
+
+The offsets can be loaded at any time, including just before a shot. This is important, as the offset measured in a calibration long before a shot may not
+be exactly equal to the offset when the machine is running with a full complement of power supplies and magnetic fields potentially affecting the sensor
+and cabling. The neutral gas pressure may also affect the offset. Accurately predicting the offset drift throughout a shot is an interesting area of
+research.
+
+\subsection{Filter Design}
+\label{sec:lpfdesign}
+As described in Section~\ref{sec:voltage}, the calculation of the voltage amplitude and phase involves time averaging, which is performed on the D-TACQ
+unit with a low-pass filter. In addition, the real-time power calculation uses a deconvolution filter, as described in Section~\ref{sec:rtpower}. The
+bandwidth for both of these filters is set using the FILTER{\_}BANDWIDTH control knob (Section~\ref{sec:knobshl}).
+
+The filter used to calculate the voltage is designed and loaded onto the FPGA by the \mbox{\path{/usr/local/bin/lpfdesign.tcl}} script. It takes no
+arguments, and loads a single filter which is used by all channels.
+
+The deconvolution filter used to calculate the power is designed and loaded by the \mbox{\path{/usr/local/bin/power_filter_design.tcl}} script. It takes 3
+arguments:
+\begin{enumerate}
+\item{\texttt{channel}: the channel to load, numbered from 1 to 48 (8 channels per site).}
+\item{\texttt{sens}: the sensitivity of the channel as calculated from a calibration, in V/W.}
+\item{\texttt{tau}: the cooling time for the channel as calculated from a calibration, in seconds.}
+\end{enumerate}
+Since each channel will have different calibration factors, a different deconvolution filter must be loaded for every channel being used. Including the
+sensitivity in the filter design allows the same scaling factor (Equation~\ref{equ:pwatts}) to be applied to every channel to convert to physical units
+afterwards. When loading a new deconvolution filter, you should also update the offsets (Section~\ref{sec:offset_correction}) for that channel to
+match. Like with the voltage filter, all deconvolution filters will have the same bandwidth, given by the control knob.
+
+\textbf{Important}: between each deconvolution filter channel reload you \textbf{must} run \mbox{\path{/usr/local/bin/wait_for_filters}}, as described in
+the FILTER{\_}STATUS knob in Section~\ref{sec:knobsll}. Failure to do so will lock up the system and require a hard reset.
+
+\section{Conclusion}
+This document describes the theory behind the BOLODSP module, which is intended to complement the D-TACQ BOLO8 hardware module. It also describes the
+various settings and scripts used to operate the unit as a useful bolometer electronics back-end. For more detailed information about the system, consult
+the references.
+
+Finally, this is a very new product. There are likely to be bugs or undesirable ``features'', as in every new product (and indeed some very established
+products). The source code for the software (and soon the FPGA firmware module) is freely available, and offers of collaboration for fixes or enhancements
+will be greatly received.
 
 \bibliographystyle{ieeetr}
 \bibliography{refs}
