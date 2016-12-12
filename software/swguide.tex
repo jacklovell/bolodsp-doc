@@ -175,8 +175,9 @@ calibration values. They must however be converted into Cartesian representation
     Equation~\ref{equ:A}, using $\Delta I = I(t=0) - I_{off}$, and $\Delta Q = Q(t=0) - Q_{off}$.}
 \end{itemize}
 During the calibration, the FPGA measures $V_{OH} = 2V_{OS}$ and $I_{OS}$, in addition to $A$ and $\phi$, thus providing all the required data for a
-calibration in one place. Note the difference between $V_{OH}$ and $V_{OS}$: the latter is provided only for illustration, whereas the former is what is
-configured by software and subsequently measured.
+calibration in one place. Note the difference between $V_{OH}$ and $V_{OS}$: the latter is provided only for illustration, whereas the former is what
+is configured by software and subsequently measured. For consistency, we shall also refer in the rest of this guide to $I_{OH}$, which is equal to
+$I_{OS}$, to minimise confusion with the current measurement offset $I_{off}$ (see Section \ref{sec:scaling}).
 
 \section{Data Outputs}
 \label{sec:outputs}
@@ -237,7 +238,7 @@ The scalings are as follows:
 \begin{equation}
   \label{equ:pwatts}
   \begin{split}
-    P(W) &= P(counts) V_{gain} \frac{20}{18 \times 2^{24} \times Z_{30}} \\
+    P(W) &= P(counts) V_{gain} \frac{20}{18 \times 2^{18} \times Z_{30}} \\
     &= P(counts) V_{gain} \times 3.6400067\ldots \times 10^{-6}
   \end{split}
 \end{equation}
@@ -296,8 +297,8 @@ Set to 1 to put the device in calibration mode, 0 to put it in normal mode. This
 channel (Section~\ref{sec:channels}). Again, this is done automatically by the calibration script.
 
 \subsubsection{FILTER{\_}STATUS}
-This is a read-only knob, and indicates the readiness of the filters on the FPGA to be reloaded. It reports a hexadecimal value, and should be 0x33 before
-attempting any reload. If it reads anything else, ensure you have read back any previous capture data and then run
+This is a read-only knob, and indicates the readiness of the filters on the FPGA to be reloaded. It reports a hexadecimal value, and should be
+\texttt{0x33} before attempting any reload. If it reads anything else, ensure you have read back any previous capture data and then run
 \mbox{\path{/usr/local/bin/wait_for_filters}}, which will do a short capture to pass data through the filters so they are ready for the next reload.
 
 \subsection{High-level knobs}
@@ -369,7 +370,7 @@ A calibration run proceeds as follows. These steps should be performed by a shot
 \item{Set the offsets for all voltage channels to 0 (Section~\ref{sec:offset_correction})}.
 \item{Set up a transient data capture, expecting a soft trigger, to acquire at least $(0.1 + T_{HEAT} + T_{COOL})\times 10000$ samples. The system is now
     ready to perform the calibration.}
-\item{The \path{/usr/local/bin/bolo_calibration} script is used to control the hardware to perform a calibration procedure, as described in
+\item{Run the \path{/usr/local/bin/bolo_calibration} script, which controls the hardware to perform a calibration procedure, as described in
     Section~\ref{sec:calibration}. To run it, a user or script must have SSH access to the device. It reads the voltage and timing high-level knobs, and
     proceeds as follows:
 \begin{enumerate}
