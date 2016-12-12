@@ -108,6 +108,13 @@ bandwidth of the output. Higher bandwidth allows higher time resolution, but com
 frequency noise components are less suppressed. A helper script exists to calculate the appropriate filter coefficients for a given bandwidth, and load
 them onto the FPGA (see Section~\ref{sec:lpfdesign}).
 
+The process of time averaging over multiple periods means it is no longer necessary to sample at a high enough rate to resolve the AC excitation
+waveform. Instead, we only need to sample at a high enough rate to resolve amplitude (and phase) fluctuations below the cutoff frequency of the filter
+used to perform the time averaging. Bolometer sensors naturally suppress high frequency signals due to the thermal properties of the sensor, so the
+signal-to-noise ratio gets very low at higher frequencies. The BOLODSP module on the FPGA downsamples the output data by a factor of 100. This
+means that for an input sampling rate of 1MSPS (the maximum sampling rate of the BOLO8BLF), data will be output at 10kSPS\@. This means that the FPGA
+filters should be set to a maximum of 5kHz, though in practice there is little point going above about 1.5kHz.
+
 \subsection{Voltage Offset}
 \label{sec:offset}
 No sensor is perfect, in the sense that the bridge will never be perfectly balanced in the absence of any input power. Likewise, no electronics is perfect,
@@ -318,7 +325,7 @@ close to that set by the VBIAS knob. As a guide, when VBIAS is set to 1V, the di
 \subsubsection{FILTER{\_}BANDWIDTH}
 As mentioned in Section~\ref{sec:voltage}, the choice of filter affects the trade-off between noise levels and time resolution. The filters themselves are
 designed using helper scripts (Section~\ref{sec:lpfdesign}). Those scripts take the value of this knob to design a filter with a given bandwidth. The
-bandwidth should be specified in Hz.
+bandwidth should be specified in Hz. The maximum supported bandwidth is 1950Hz for use with the filter helper scripts.
 
 \subsubsection{THEAT}
 This value, in seconds, specifies the length of time spent ohmically heating the sensor during calibration. It should be long enough to ensure the sensor
