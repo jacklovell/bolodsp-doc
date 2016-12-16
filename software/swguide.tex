@@ -295,7 +295,7 @@ module, the STEP{\textunderscore}SIZE value $S$ required to produce an excitatio
 Here, $f_{clk}$ is the system clock frequency. Is is typically 100 MHz on older D-TACQ systems, and 125 MHz on newer systems. Contact D-TACQ if you are
 unsure which frequency to use (or pick one and check the output on a scope to see if it's the correct frequency).
 
-There also exists a script, \path{/usr/local/bin/set.fdrive}~\texttt{<freq>}, which takes a frequency in Hz and automatically sets the register
+There also exists a script, \mbox{\path{/usr/local/bin/set.fdrive}~\texttt{<freq>}}, which takes a frequency in Hz and automatically sets the register
 correctly. By default it assumes 100 MHz system clock, but this can be changed by modifying the script contents (contact D-TACQ or the author for
 details).
 
@@ -377,7 +377,7 @@ A calibration run proceeds as follows. These steps should be performed by a user
 \item{Set the offsets for all voltage channels to 0 (Section~\ref{sec:offset_correction})}.
 \item{Set up a transient data capture, expecting a soft trigger, to acquire at least $(0.1 + T_{HEAT} + T_{COOL})\times 10000$ samples. The system is now
     ready to perform the calibration.}
-\item{Run the \path{/usr/local/bin/bolo_calibration} script, which controls the hardware to perform a calibration procedure, as described in
+\item{Run the \mbox{\path{/usr/local/bin/bolo_calibration}} script, which controls the hardware to perform a calibration procedure, as described in
     Section~\ref{sec:calibration}. To run it, a user or script must have SSH access to the device. It reads the voltage and timing high-level knobs, and
     proceeds as follows:
 \begin{enumerate}
