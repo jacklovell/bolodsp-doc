@@ -397,6 +397,69 @@ takes THEAT + TCOOL + a few seconds to complete, plus the time to read back the 
 starting a calibration to the expected shot trigger, just in case, but the procedure is quick enough to be performed before every shot if needed. Of
 course, a calibration can also be performed separately, by following this procedure manually.
 
+\subsubsection{The calibfit utility}
+\label{sec:calibfit}
+Newer versions of the BOLODSP package (those built after 16th December 2016) include the \mbox{\path{/usr/local/bin/calibfit}} command. This can be
+called after a calibration run has been performed and the data captured with a transient capture, and will automatically perform curve fitting on the
+data to calculate the sensitivity, cooling time and voltage offsets for a given channel. These can be used to load the offset registers
+(Section~\ref{sec:offset_correction}) and design the deconvolution filters for the real-time power output (Section~\ref{sec:lpfdesign}) without having
+to read the data from the device, calculate the fit parameters offline and then send the correct parameters back to the device.
+
+The \texttt{calibfit} utility works on a single channel, supplied via a command line argument. Using $V_{OH}$ it determines what part of the time trace
+is heating, and which part is cooling: if $V_{OH}$ is above a threshold value then the sensor is being ohmically heated at that time, and if it is
+below a threshold value after a given time (to allow for the short pause for offset measurement at the start of the calibration) then it assumes
+cooling is occurring. The utility thus requires that the calibration has been performed in the manner described in Section~\ref{sec:run_calibration},
+preferably using the \texttt{bolo\_calibration} utility. The wait time and heating/cooling thresholds are configurable as command line parameters.
+
+From the heating phase, \texttt{calibfit} calculates the applied ohmic heating power using $P_{OH} = V_{OH} I_{OH}$, which is used in the sensitivity
+calculation. From the cooling phase, it calculates $I$ and $Q$ using Equations~\ref{equ:I} and~\ref{equ:Q} and then fits the following curve (same
+for $Q$):
+\begin{equation}
+  \label{equ:Icool}
+  I_{cool} = \Delta I e^{-t / \tau} + I_{off}
+\end{equation}
+Here, $t$ is the time since cooling started, and $\Delta I$, $\tau$ and $I_{off}$ are the fit parameters (for performance reasons $1/\tau$ is fitted,
+but the program outputs $\tau$). To generate the time vector $t$ for the fit, the program assumes a sample rate of 10kSPS, which is the expected output
+sample rate if setting the BOLO8s to sample at 1MSPS\@.
+
+The sensitivity is calculated from $\Delta I$, $\Delta Q$ and $P_{OH}$ as described in Section~\ref{sec:calibration}. The cooling time is the average
+of the $I$ and $Q$ fits, since the cooling time is independent of the phase (and therefore should be identical for both $I$ and $Q$ fits if the fits
+were perfect and free of noise). The offsets $A_{off}$ and $\phi_{off}$ are calculated from $I_{off}$ and $Q_{off}$ using Equations~\ref{equ:I}
+and~\ref{equ:Q}, though both polar and Cartesian offsets are output by the utility, so offset correction can be done either on-chip
+(Section~\ref{sec:offset_correction}) or in post-processing using the user's preferred method (see Section~\ref{sec:offset}).
+
+The \texttt{calibfit} utility takes the following command line options:
+\begin{verbatim}
+calibfit [-c channel] [-C cooling_theshold]
+         [-H heating_threshold] [-t t_wait] [-T tau_guess]
+\end{verbatim}
+The options are as follows:
+\begin{itemize}
+\item{\texttt{channel}: The physical channel to use. Default=1}
+\item{\texttt{cooling\_threshold}: Assume cooling if the voltage is below this threshold (in V), and after t\_wait. Default=0.001}
+\item{\texttt{heating\_threshold}: Assume heating if the voltage is above this threshold (in V). Default=0.95}
+\item{\texttt{t\_wait}: Assume no cooling occurs before this time (in seconds). Default=0.2}
+\item{\texttt{tau\_guess}: Initial guess at the cooling time (in seconds), to aid the fit. Default=0.2}
+\end{itemize}
+
+A sample output of the program is below, done for a calibration of a sensor in air:
+\begin{verbatim}
+acq2106_006> calibfit -c13
+Successfully read 21000 samples
+Fit parameters for i: 0.003383145	16.24632	-0.02794252
+Fit parameters for q: -0.003408019	16.20701	0.02941226
+Fitting complete. Fit parameters:
+sens = 12.19623
+tau = 0.06162704
+a0 = 0.08113854
+phi0 = -2.330575
+i0 = -0.02794252
+q0 = 0.02941225
+\end{verbatim}
+The output is printed to \texttt{stdout}. It is the user's responsibility to redirect the output to a file to record for posterity, and/or parse the
+output to have the device automatically load the offset registers (Section~\ref{sec:offset_correction}) and the real-time power filter
+(Section~\ref{sec:lpfdesign}).
+
 \subsection{Offset Correction}
 \label{sec:offset_correction}
 As described in Section~\ref{sec:offset}, the voltage measured by the BOLO8 will include an offset due to intrinsic bridge imbalance and cross talk in the
