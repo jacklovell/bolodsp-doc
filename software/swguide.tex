@@ -35,7 +35,9 @@ package installed should be directed to D-TACQ directly, and not to the author, 
 \label{sec:voltage}
 \begin{figure}
   \centering
-  \includegraphics[width=0.3\textwidth]{sensor_schematic.eps}
+  % \includegraphics[width=0.3\textwidth]{sensor_schematic.eps}
+  \def\svgwidth{0.3\columnwidth}
+  \input{sensor_schematic.pdf_tex}
   \caption{Electrical schematic of bolometer sensor\label{fig:sensor}}
 \end{figure}
 A resistive bolometer consists of 4 resistors in a Wheatstone bridge configuration (see Figure~\ref{fig:sensor}), as described in Ref~\cite{mast-1991}.
@@ -152,39 +154,45 @@ use in a real-time control loop. The design of this filter requires an accurate 
 
 \subsection{Calibration}
 \label{sec:calibration}
-It can be seen from Equation~\ref{equ:pbol} that at least 2 quantities need to be determined from a calibration: the sensitivity $S$ and the cooling time
-$\tau$. The sensitivity can be determined by measuring the change in the voltage output for a known input power, and the cooling time can be calculated by
-fitting an exponential decay to the voltage curve as the sensor cools immediately after removing all input power. In the BOLO system, the input power is
-provided by ohmic heating, by applying a DC bias to both $V_{in}$ and $V_{out}$, whilst at the same time keeping the AC excitation voltage of $V_{in}$ to
-simulate operation with radiation heating as closely as possible.
+It can be seen from Equation~\ref{equ:pbol} that at least 2 quantities need to be determined from a calibration: the sensitivity $S$ and the cooling
+time $\tau$. The sensitivity can be determined by measuring the change in the voltage output for a known input power, and the cooling time can be
+calculated by fitting an exponential decay to the voltage curve as the sensor cools immediately after removing all input power. In the BOLO system,
+the input power is provided by ohmic heating, by applying a DC bias (or offset) to both $V_{in}$ and $V_{out}$, whilst at the same time keeping the
+AC excitation voltage of $V_{in}$ to simulate operation with radiation heating as closely as possible.
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.5\textwidth]{calibration.eps}
+  \def\svgwidth{\columnwidth}
+  \input{calibration.pdf_tex}
   \caption{Electrical schematic of the calibration procedure\label{fig:calibration}}
 \end{figure}
 
-The calibration procedure is described in some detail in Ref~\cite{lovell-2015}. Figure~\ref{fig:calibration}, taken from that paper, shows the calibration
+The calibration procedure is described in some detail in Ref~\cite{lovell-2015}. Figure~\ref{fig:calibration}, based on that paper, shows the calibration
 procedure. The application of $V_{OS}$ is such that current flows through the two measurement resistors $R_M$, but not through the reference resistors
-$R_R$. This causes only the measurement resistors to be ohmically heated, with a heating power given by
+$R_R$. This causes only the measurement resistors to be ohmically heated, with the total heating power for both measurement resistors given by
 \begin{equation}
   \label{equ:pohmic}
   P_{OH} = 2 V_{OS} I_{OS}
 \end{equation}
+Note that the voltages applied to the bridge are differential: the quantities $V_{AC}$ and $V_{OS}$ are those requested of the BOLO DACs, and $V_{OS}$ and
+$I_{OS}$ are the quantities measured by the ADC. The differential nature of the signal results in the signs and factors of 2 present in the voltages at
+each point in the circuit.
+
+
 When the ohmic heating is switched off, the sensor cools. The bridge voltage (amplitude and phase) measured during cooling provides a number of useful
 calibration values. They must however be converted into Cartesian representation ($I$ and $Q$) first:
 \begin{itemize}
-\item{The offsets $A_{off}$ and $\phi_{off}$ can be calculated using Equations~\ref{equ:I} and~\ref{equ:Q}, using $I_{off} = I(t\rightarrow\infty)$ and $Q_{off}
-    = Q(t\rightarrow\infty)$}
+\item{The offsets $A_{off}$ and $\phi_{off}$ can be calculated using Equations~\ref{equ:I} and~\ref{equ:Q}, using $I_{off} = I(t\rightarrow\infty)$ and
+    $Q_{off} = Q(t\rightarrow\infty)$}
 \item{The cooling time can be calculated by fitting an exponential decay of the $I$ and $Q$ cooling curves. The decay time constant is the cooling time.
     It should be the same (to within errors) for both curves.}
 \item{The sensitivity is given by $S = \frac{P_{OH}}{\Delta A}$, where $P_{OH}$ is given by Equation~\ref{equ:pohmic} and $\Delta A$ is given by
     Equation~\ref{equ:A}, using $\Delta I = I(t=0) - I_{off}$, and $\Delta Q = Q(t=0) - Q_{off}$.}
 \end{itemize}
-During the calibration, the FPGA measures $V_{OH} = 2V_{OS}$ and $I_{OS}$, in addition to $A$ and $\phi$, thus providing all the required data for a
-calibration in one place. Note the difference between $V_{OH}$ and $V_{OS}$: the latter is provided only for illustration, whereas the former is what
-is configured by software and subsequently measured. For consistency, we shall also refer in the rest of this guide to $I_{OH}$, which is equal to
-$I_{OS}$, to minimise confusion with the current measurement offset $I_{off}$ (see Section~\ref{sec:scaling}).
+During the calibration, the FPGA measures $V_{OS}$ and $I_{OS}$, in addition to $A$ and $\phi$, thus providing all the required data for a
+calibration in one place. For consistency, we shall refer in the rest of this guide to $V_{OH}$ and $I_{OH}$, which are equal to $V_{OS}$ and
+$I_{OS}$, to minimise confusion with the voltage offsets $I_{off}$ and $Q_{off}$ and the current measurement offset $I_{off}$ (see
+Section~\ref{sec:scaling}).
 
 \section{Data Outputs}
 \label{sec:outputs}
@@ -320,7 +328,8 @@ This value, in volts, sets the extra voltage to apply to one diagonal of the bri
 The electronics features some diodes for noise reduction. There will be a voltage drop across these diodes, meaning that the applied bias voltage $V_{OH}$
 in calibration will be less than the requested voltage on one of the bridge diagonals. Set this knob (in volts) to apply an extra voltage across that
 diagonal to compensate for the voltage drop. The value should be tweaked until the measured ohmic heating voltage $V_{OH}$ (Section~\ref{sec:channels}) is
-close to that set by the VBIAS knob. As a guide, when VBIAS is set to 1V, the diode voltage drop is about 0.5V.
+close to that set by the VBIAS knob. As a guide, when VBIAS is set to 1V, the diode voltage drop is about 0.5V for a $1.2\mathrm{k}\Omega$ bolometer
+sensor.
 
 \subsubsection{FILTER{\_}BANDWIDTH}
 As mentioned in Section~\ref{sec:voltage}, the choice of filter affects the trade-off between noise levels and time resolution. The filters themselves are
@@ -381,7 +390,7 @@ A calibration run proceeds as follows. These steps should be performed by a user
     Section~\ref{sec:calibration}. To run it, a user or script must have SSH access to the device. It reads the voltage and timing high-level knobs, and
     proceeds as follows:
 \begin{enumerate}
-\item{Put the device in calibration mode, so that $V_{OH}$ and $I_{OS}$ are recorded, instead of real-time power.}
+\item{Put the device in calibration mode, so that $V_{OH}$ and $I_{OH}$ are recorded, instead of real-time power.}
 \item{Trigger the data collection.}
 \item{Wait 0.1 seconds to measure the voltages and current with no heating applied (this can be helpful in post-processing).}
 \item{Turn the ohmic heating on, and wait for THEAT seconds}.
@@ -411,7 +420,7 @@ below a threshold value after a given time (to allow for the short pause for off
 cooling is occurring. The utility thus requires that the calibration has been performed in the manner described in Section~\ref{sec:run_calibration},
 preferably using the \texttt{bolo\_calibration} utility. The wait time and heating/cooling thresholds are configurable as command line parameters.
 
-From the heating phase, \texttt{calibfit} calculates the applied ohmic heating power using $P_{OH} = V_{OH} I_{OH}$, which is used in the sensitivity
+From the heating phase, \texttt{calibfit} calculates the applied ohmic heating power using $P_{OH} = 2 V_{OH} I_{OH}$, which is used in the sensitivity
 calculation. From the cooling phase, it calculates $I$ and $Q$ using Equations~\ref{equ:I} and~\ref{equ:Q} and then fits the following curve (same
 for $Q$):
 \begin{equation}
@@ -449,7 +458,7 @@ Successfully read 21000 samples
 Fit parameters for i: 0.003383145	16.24632	-0.02794252
 Fit parameters for q: -0.003408019	16.20701	0.02941226
 Fitting complete. Fit parameters:
-sens = 12.19623
+sens = 6.098115
 tau = 0.06162704
 a0 = 0.08113854
 phi0 = -2.330575
