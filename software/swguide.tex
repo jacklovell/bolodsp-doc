@@ -385,8 +385,9 @@ A calibration run proceeds as follows. These steps should be performed by a user
 \item{Reset the DSP system, by running the \mbox{\path{/usr/local/bin/reset.dsp}} script. This ensures the channel ordering and time bases will be
     correct.}
 \item{Set the offsets for all voltage channels to 0 (Section~\ref{sec:offset_correction})}.
-\item{Set up a transient data capture, expecting a soft trigger, to acquire at least $(0.1 + T_{HEAT} + T_{COOL})\times 10000$ samples. The system is now
-    ready to perform the calibration.}
+\item{Set up a transient data capture, set to wait until the system receives soft trigger, to acquire at least $(0.1 + T_{HEAT} + T_{COOL})\times 10000$ samples. For example, if $T_{HEAT} = T_{COOL} = \SI{1}{s}$:\\
+    \verb!set.site 0 `transient POST=21000 SOFT_TRIGGER=0; set_arm'!\\
+    The system is now ready to perform the calibration.}
 \item{Run the \mbox{\path{/usr/local/bin/bolo_calibration}} script, which controls the hardware to perform a calibration procedure, as described in
     Section~\ref{sec:calibration}. To run it, a user or script must have SSH access to the device. It reads the voltage and timing high-level knobs, and
     proceeds as follows:
