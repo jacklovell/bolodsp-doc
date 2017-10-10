@@ -31,7 +31,7 @@ It is only concerned with the commands and settings provided by the package itse
 package installed should be directed to D-TACQ directly, and not to the author, unless the query is specifically about an aspect of the BOLODSP module.
 
 \section{Theory of Operation}
-\subsection{Voltage Measurement}
+\subsection{Voltage Measurement}%
 \label{sec:voltage}
 \begin{figure}
   \centering
@@ -117,7 +117,7 @@ signal-to-noise ratio gets very low at higher frequencies. The BOLODSP module on
 means that for an input sampling rate of 1MSPS (the maximum sampling rate of the BOLO8BLF), data will be output at 10kSPS\@. This means that the FPGA
 filters should be set to a maximum of 5kHz, though in practice there is little point going above about 1.5kHz.
 
-\subsection{Voltage Offset}
+\subsection{Voltage Offset}%
 \label{sec:offset}
 No sensor is perfect, in the sense that the bridge will never be perfectly balanced in the absence of any input power. Likewise, no electronics is perfect,
 and there will always be some cross talk between excitation and measurement voltages. This leads to a voltage offset with no input power:
@@ -135,7 +135,7 @@ The FPGA firmware has the capability to perform the first of these methods on-ch
 of the geometry), and the remaining amplitude will be a measure only of the bridge imbalance (and hence the temperature change of the sensor foil). The
 phase is therefore a useful measurement for data validation.
 
-\subsection{Real-Time Power Output}
+\subsection{Real-Time Power Output}%
 \label{sec:rtpower}
 The physics involved in calculating the power aborted by the foil from the resistance change of the meander resistors is complex, particularly when an AC
 excitation voltage is involved. For a thorough treatment of the subject, see Ref~\cite{giannone-2002}. However, the following simplified formula gives a
@@ -152,7 +152,7 @@ Section~\ref{sec:voltage}, and adding to this the time derivative as in Equation
 will produce an estimate of the incident power straight from the bridge voltage measurement, with a latency of about 1ms, which should be quick enough to
 use in a real-time control loop. The design of this filter requires an accurate calibration, and is discussed in Section~\ref{sec:calibration}.
 
-\subsection{Calibration}
+\subsection{Calibration}%
 \label{sec:calibration}
 It can be seen from Equation~\ref{equ:pbol} that at least 2 quantities need to be determined from a calibration: the sensitivity $S$ and the cooling
 time $\tau$. The sensitivity can be determined by measuring the change in the voltage output for a known input power, and the cooling time can be
@@ -175,7 +175,7 @@ $R_R$. This causes only the measurement resistors to be ohmically heated, with t
   P_{OH} = 2 V_{OS} I_{OS}
 \end{equation}
 Note that the voltages applied to the bridge are differential: the quantities $V_{AC}$ and $V_{OS}$ are those requested of the BOLO DACs, and $V_{OS}$ and
-$I_{OS}$ are the quantities measured by the ADC. The differential nature of the signal results in the signs and factors of 2 present in the voltages at
+$I_{OS}$ are the quantities measured by the ADC.\@ The differential nature of the signal results in the signs and factors of 2 present in the voltages at
 each point in the circuit.
 
 
@@ -194,9 +194,9 @@ calibration in one place. For consistency, we shall refer in the rest of this gu
 $I_{OS}$, to minimise confusion with the voltage offsets $I_{off}$ and $Q_{off}$ and the current measurement offset $I_{off}$ (see
 Section~\ref{sec:scaling}).
 
-\section{Data Outputs}
+\section{Data Outputs}%
 \label{sec:outputs}
-\subsection{Output Channel Format}
+\subsection{Output Channel Format}%
 \label{sec:channels}
 For each physical channel on a BOLO8, there are 3 ``logical'' output channels. This means each BOLO8 site has 24 output channels, each of which can be read
 like any other D-TACQ output (see the D-TACQ 4G user guide for details). All channels are 4-byte signed integers. The channels are arranged as follows:
@@ -216,7 +216,7 @@ For a physical channel $N$ (numbered 1--8 per site), logical channel $3N-2$ is t
 real-time power or calibration quantities. So for example, for physical channel 3, logical channel 7 is the amplitude, 8 is the phase and 9 is
 power/calibration signals.
 
-\subsection{Data Scaling}
+\subsection{Data Scaling}%
 \label{sec:scaling}
 The following are the numerical conversion factors to convert from raw counts (the 2- or 4-byte values read from the device) into physical units. There is
 a dependence on $V_{gain}$, which is the voltage gain used on the BOLO8's ADCs. The value can be read back as a knob in CSS or EPICS (or your favourite data
@@ -278,12 +278,12 @@ $I_{off}$ in Equation~\ref{equ:curramps} is the current reading when $V_{OH} = 0
 $20.83 \times 10^{-3} \mathrm{A}$ but will vary slightly between channels. The most reliable way to measure $I_{off}$ is to take the mean value of
 the current during the cooling part of the calibration.
 
-\section{Control Knobs}
+\section{Control Knobs}%
 \label{sec:knobs}
 This section describes the control knobs available for the BOLODSP module. They are read and set in the same way as standard D-TACQ knobs using the remote
 command interface, with the BOLODSP module treated as Site 14. See the D-TACQ 4G user guide for details.
 
-\subsection{Low-level knobs}
+\subsection{Low-level knobs}%
 \label{sec:knobsll}
 These control knobs are a fairly low level interface to the underlying FPGA module. For the most part they will be set by utility scripts. The ones which
 may require the user to manually set them (or at least write a script to do so during the shot cycle) are documented here.
@@ -313,10 +313,10 @@ channel (Section~\ref{sec:channels}). This is done automatically by the calibrat
 
 \subsubsection{FILTER{\_}STATUS}
 This is a read-only knob, and indicates the readiness of the filters on the FPGA to be reloaded. It reports a hexadecimal value, and should be
-\texttt{0x33} before attempting any reload. If it reads anything else, ensure you have read back any previous capture data and then run
+\texttt{0x33} before attempting any reload. If it reads anything else, ensure you have read back any previous capture data and then run %chktex 29
 \mbox{\path{/usr/local/bin/wait_for_filters}}, which will do a short capture to pass data through the filters so they are ready for the next reload.
 
-\subsection{High-level knobs}
+\subsection{High-level knobs}%
 \label{sec:knobshl}
 These control knobs interface with the BOLODSP module at a higher level. Their inputs are in physical units, rather than register settings, and the
 utility scripts read these knobs in order to set the lower-level knobs. All high-level knobs presented by the BOLODSP package are described here, and
@@ -365,7 +365,7 @@ performing the calibration earlier before sources of electrical noise such as co
 Like the CAL{\_}EN knob, this is ignored by the BOLODSP module and software, but exists to allow user-written shot-cycle scripts to examine it and work
 out when they need to call the calibration script.
 
-\section{Operation}
+\section{Operation}%
 \label{sec:operation}
 This section documents the usage of the various helper scripts throughout a shot cycle. Before a shot, a calibration should be performed (possible before
 every shot, but not strictly necessary), and the results of the calibration should be used to remove offsets from the signal and design the filters for
@@ -375,7 +375,7 @@ module.
 
 Refer also to the data capture section of the D-TACQ 4G user guide for details of how to set up a transient capture.
 
-\subsection{Calibration}
+\subsection{Calibration}%
 \label{sec:run_calibration}
 A calibration run proceeds as follows. These steps should be performed by a user-written script, perhaps as part of a shot cycle script.
 \begin{enumerate}
@@ -406,7 +406,7 @@ takes THEAT + TCOOL + a few seconds to complete, plus the time to read back the 
 starting a calibration to the expected shot trigger, just in case, but the procedure is quick enough to be performed before every shot if needed. Of
 course, a calibration can also be performed separately, by following this procedure manually.
 
-\subsubsection{The calibfit utility}
+\subsubsection{The calibfit utility}%
 \label{sec:calibfit}
 Newer versions of the BOLODSP package (those built after 16th December 2016) include the \mbox{\path{/usr/local/bin/calibfit}} command. This can be
 called after a calibration run has been performed and the data captured with a transient capture, and will automatically perform curve fitting on the
@@ -469,7 +469,7 @@ The output is printed to \texttt{stdout}. It is the user's responsibility to red
 output to have the device automatically load the offset registers (Section~\ref{sec:offset_correction}) and the real-time power filter
 (Section~\ref{sec:lpfdesign}).
 
-\subsection{Offset Correction}
+\subsection{Offset Correction}%
 \label{sec:offset_correction}
 As described in Section~\ref{sec:offset}, the voltage measured by the BOLO8 will include an offset due to intrinsic bridge imbalance and cross talk in the
 electronics hardware and cabling. The offset can be measured from a calibration, either from the initial 0.1s equilibrium method or the asymptotic voltage
@@ -491,9 +491,9 @@ takes 4 mandatory arguments:
 The offsets can be loaded at any time, including just before a shot. This is important, as the offset measured in a calibration long before a shot may not
 be exactly equal to the offset when the machine is running with a full complement of power supplies and magnetic fields potentially affecting the sensor
 and cabling. The neutral gas pressure may also affect the offset. Accurately predicting the offset drift throughout a shot cycle is an interesting area of
-research \cite{zhang-2012}.
+research~\cite{zhang-2012}.
 
-\subsection{Filter Design}
+\subsection{Filter Design}%
 \label{sec:lpfdesign}
 As described in Section~\ref{sec:voltage}, the calculation of the voltage amplitude and phase involves time averaging, which is performed on the D-TACQ
 unit with a low-pass filter. In addition, the real-time power calculation uses a deconvolution filter, as described in Section~\ref{sec:rtpower}. The
