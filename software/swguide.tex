@@ -4,6 +4,7 @@
 \usepackage{graphicx}
 \usepackage{color}
 \usepackage{amsmath}
+\usepackage{siunitx}
 
 \begin{document}
 
@@ -468,6 +469,49 @@ q0 = 0.02941225
 The output is printed to \texttt{stdout}. It is the user's responsibility to redirect the output to a file to record for posterity, and/or parse the
 output to have the device automatically load the offset registers (Section~\ref{sec:offset_correction}) and the real-time power filter
 (Section~\ref{sec:lpfdesign}).
+
+\subsubsection{Example calibration data}%
+\label{sec:example-calibr-data}
+
+We have provided screen grabs of the 3 calibration traces, shown in CSS using the plot transient tab, to give an example of what a successful calibration of a bolometer sensor should look like.
+Note that the precise values will vary significantly with different hardware.
+In particular, the phase values will change with cable length, and if the phase is positive then the amplitude signal will look like it is inverted compared to these examples.
+Successful offset subtraction (see Section~\ref{sec:offset} and Section~\ref{sec:offset_correction}) will correct for this.
+
+Figure~\ref{fig:example-acal} shows the voltage amplitude, without any offset correction applied.
+Figure~\ref{fig:example-phical} shows the phase, again without any offset correction.
+Figure~\ref{fig:example-dc} shows the DC channel, which contains both the DC bias voltage and the current applied to the bridge in the form $V_{DC} \cdot 2^{16} + I_{DC}$.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{acal_CSS.png}
+  \caption[Example trace for the bridge amplitude for a calibration]{Example trace for the bridge amplitude for a calibration.
+    There are 3 regions: the first 1.5E3 samples with no heating indicates the amplitude offset.
+    Then there are approximately 1E4 samples of heating, where the bridge heats up (shown an an exponential curve) as the DC bias voltage is applied.
+    Finally, the last 1E4 samples show the cooling curve: the exponential decay of the bridge amplitude as the measurement resistors return to equilibrium.
+    Note that the signal appears to be inverted here (an increase in the bridge temperature reduces the amplitude), but this is simply due to the phase being negative.
+    After performing offset correction this particular trace will be inverted, and the first 1.5E3 samples will be approximately 0.
+    Different cabling setups affect the phase, so this trace may or may not be inverted for other users (though whether or not a given channel is inverted should be the same across successive calibrations if the hardware arrangement remains the same).\label{fig:example-acal}}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{phical_CSS.png}
+  \caption[Example trace for the phase for a calibration]{Example trace for the phase for a calibration.
+    The phase changes relatively little, though there is a noticable different between heating and cooling due to the internal hardware of the BOLO8 board.
+    Note that the phase in this case is negative, which causes the amplitude  trace to be inverted: it may not be in other setups with different cabling.\label{fig:example-phical}}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{VDC_CSS.png}
+  \caption[Example trace for the DC bias in a calibration]{Example trace for the DC bias in a calibration.
+    This includes both the DC bias voltage and the current flowing through the resistors.
+    The initial 1.5E3 samples with no heating, the 1E4 samples of heating and the 1e4 samples of cooling can clearly be seen.
+    Since this quantity is actually $V_{DC} \cdot 2^{16} + I_{DC}$, even a small negative voltage during the cooling will appear to produce a large negative quantity in CSS.\@
+    In this case, the heating voltage was \SI{1}{V}, and during cooling \SI{0.01}{V} was measured.
+    The current measurement, being $2^{16}$ times smaller than the voltage measurement, is impossible to see.\label{fig:example-dc}}
+\end{figure}
 
 \subsection{Offset Correction}%
 \label{sec:offset_correction}
