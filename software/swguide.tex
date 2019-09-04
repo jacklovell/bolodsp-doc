@@ -337,6 +337,11 @@ As mentioned in Section~\ref{sec:voltage}, the choice of filter affects the trad
 designed using helper scripts (Section~\ref{sec:lpfdesign}). Those scripts take the value of this knob to design a filter with a given bandwidth. The
 bandwidth should be specified in Hz. The maximum supported bandwidth is 1950Hz for use with the filter helper scripts.
 
+\subsubsection{TWAIT}
+This value, in seconds, specifies the length of time to wait at the start of the calibration before applying the bias voltage to heat the sensor.
+This can be useful for checking the offset calculated from the calibration cooling curve.
+A value of \SI{0.1}{s} should be sufficient for most applications.
+
 \subsubsection{THEAT}
 This value, in seconds, specifies the length of time spent ohmically heating the sensor during calibration. It should be long enough to ensure the sensor
 has reached equilibrium, i.e.~several cooling times.
